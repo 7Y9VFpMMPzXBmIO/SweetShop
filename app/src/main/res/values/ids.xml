@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <item name="nameInput" type="id" />
+    <item name="phoneInput" type="id" />
+    <item name="errorText" type="id" />
+</resources>
