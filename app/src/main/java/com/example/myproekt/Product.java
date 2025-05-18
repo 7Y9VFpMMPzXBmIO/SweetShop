@@ -8,7 +8,8 @@ public class Product {
     private int categoryId;
     private String details; // Новое поле
 
-    public Product(int id, String name, String description, double price, int categoryId, String details) {
+    public Product(int id, String name, String description, double price,
+                   int categoryId, String details) {
         this.id = id;
         this.name = name;
         this.description = description;

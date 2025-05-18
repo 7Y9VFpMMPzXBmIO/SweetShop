@@ -20,11 +20,11 @@
             android:inputType="text"/>
 
         <ImageButton
-            android:id="@+id/sortButton"
+            android:id="@+id/addButton"
             android:layout_width="48dp"
             android:layout_height="48dp"
-            android:src="@drawable/sort"
-            android:contentDescription="Сортировка"/>
+            android:src="@drawable/plus"
+            android:contentDescription="Добавить товар"/>
     </LinearLayout>
 
     <com.google.android.material.tabs.TabLayout

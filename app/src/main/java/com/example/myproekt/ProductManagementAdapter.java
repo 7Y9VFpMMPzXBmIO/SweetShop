@@ -18,6 +18,7 @@ public class ProductManagementAdapter extends RecyclerView.Adapter<ProductManage
     public interface OnProductClickListener {
         void onProductClick(Product product);
     }
+
     public void updateProducts(List<Product> newProducts) {
         this.products = newProducts;
         notifyDataSetChanged();
@@ -43,14 +44,14 @@ public class ProductManagementAdapter extends RecyclerView.Adapter<ProductManage
         Context context = holder.itemView.getContext();
 
         // Установка изображения
-        if (product.getDescription() != null) {
+        if (product.getDescription() != null && !product.getDescription().isEmpty()) {
             int imageResId = context.getResources().getIdentifier(
                     product.getDescription(),
                     "drawable",
                     context.getPackageName());
-            if (imageResId != 0) {
-                holder.imageView.setImageResource(imageResId);
-            }
+            holder.imageView.setImageResource(imageResId != 0 ? imageResId : R.drawable.placeholder);
+        } else {
+            holder.imageView.setImageResource(R.drawable.placeholder);
         }
 
         holder.nameTextView.setText(product.getName());
@@ -58,17 +59,14 @@ public class ProductManagementAdapter extends RecyclerView.Adapter<ProductManage
 
         // Получаем название категории
         Category category = dbHelper.getCategoryById(product.getCategoryId());
-        if (category != null) {
-            holder.categoryTextView.setText(category.getName());
-        }
+        holder.categoryTextView.setText(category != null ? category.getName() : "Без категории");
 
         holder.itemView.setOnClickListener(v -> listener.onProductClick(product));
     }
 
-
     @Override
     public int getItemCount() {
-        return products.size();
+        return products != null ? products.size() : 0;
     }
 
     public List<Product> getProducts() {

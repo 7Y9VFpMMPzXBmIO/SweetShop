@@ -655,4 +655,30 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         cursor.close();
         return null;
     }
+    public boolean deleteProduct(int productId) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        return db.delete("products", "id = ?", new String[]{String.valueOf(productId)}) > 0;
+    }
+    // В классе DatabaseHelper добавить этот метод
+    public boolean addProduct(Product product) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+
+        try {
+            values.put("_id", product.getId()); // Можно убрать, если автоинкремент
+            values.put("name", product.getName());
+            values.put("description", product.getDescription());
+            values.put("price", product.getPrice());
+            values.put("category_id", product.getCategoryId());
+            values.put("details", product.getDetails());
+
+            long result = db.insert("products", null, values);
+            return result != -1;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        } finally {
+            db.close();
+        }
+    }
 }

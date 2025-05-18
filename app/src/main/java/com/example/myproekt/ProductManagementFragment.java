@@ -1,6 +1,5 @@
 package com.example.myproekt;
 
-import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.os.Bundle;
 import android.text.Editable;
@@ -14,24 +13,21 @@ import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.Spinner;
 import android.widget.Toast;
-
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-
 import com.google.android.material.tabs.TabLayout;
-
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
+
 public class ProductManagementFragment extends Fragment {
     private DatabaseHelper dbHelper;
     private RecyclerView recyclerView;
     private ProductManagementAdapter adapter;
     private EditText searchView;
     private TabLayout tabLayout;
-    private ImageButton sortButton;
+    private ImageButton addButton;
     private List<Category> categories = new ArrayList<>();
     private List<Product> allProducts = new ArrayList<>();
 
@@ -44,7 +40,7 @@ public class ProductManagementFragment extends Fragment {
         recyclerView = view.findViewById(R.id.recyclerView);
         searchView = view.findViewById(R.id.searchView);
         tabLayout = view.findViewById(R.id.tabLayout);
-        sortButton = view.findViewById(R.id.sortButton);
+        addButton = view.findViewById(R.id.addButton);
 
         adapter = new ProductManagementAdapter(new ArrayList<>(), dbHelper, this::showEditDialog);
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
@@ -61,11 +57,60 @@ public class ProductManagementFragment extends Fragment {
             }
         });
 
-        sortButton.setOnClickListener(v -> showSortDialog());
+        addButton.setOnClickListener(v -> showAddDialog());
 
         return view;
     }
 
+    private void showAddDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+        builder.setTitle("Добавить товар");
+        View dialogView = LayoutInflater.from(getContext())
+                .inflate(R.layout.dialog_edit_product, null);
+
+        EditText nameInput = dialogView.findViewById(R.id.nameInput);
+        EditText priceInput = dialogView.findViewById(R.id.priceInput);
+        EditText detailsInput = dialogView.findViewById(R.id.detailsInput);
+        Spinner categorySpinner = dialogView.findViewById(R.id.categorySpinner);
+
+        // Настройка спиннера категорий
+        ArrayAdapter<Category> categoryAdapter = new ArrayAdapter<>(
+                getContext(),
+                android.R.layout.simple_spinner_item,
+                categories);
+        categoryAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        categorySpinner.setAdapter(categoryAdapter);
+
+        builder.setView(dialogView);
+        builder.setPositiveButton("Добавить", (dialog, which) -> {
+            try {
+                String name = nameInput.getText().toString().trim();
+                double price = Double.parseDouble(priceInput.getText().toString());
+                String details = detailsInput.getText().toString().trim();
+                Category selectedCategory = (Category) categorySpinner.getSelectedItem();
+
+                if (name.isEmpty()) {
+                    Toast.makeText(getContext(), "Введите название товара", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                // Создаем новый продукт (description оставляем пустым или можно добавить поле)
+                Product newProduct = new Product(0, name, "", price,
+                        selectedCategory.getId(), details);
+
+                if (dbHelper.addProduct(newProduct)) {
+                    Toast.makeText(getContext(), "Товар добавлен", Toast.LENGTH_SHORT).show();
+                    loadAllProducts();
+                } else {
+                    Toast.makeText(getContext(), "Ошибка при добавлении товара", Toast.LENGTH_SHORT).show();
+                }
+            } catch (NumberFormatException e) {
+                Toast.makeText(getContext(), "Некорректная цена", Toast.LENGTH_SHORT).show();
+            }
+        });
+        builder.setNegativeButton("Отмена", null);
+        builder.show();
+    }
     private void loadCategories() {
         categories = dbHelper.getAllCategories();
         tabLayout.removeAllTabs();
@@ -97,7 +142,8 @@ public class ProductManagementFragment extends Fragment {
         List<Product> filtered = new ArrayList<>();
         for (Product product : allProducts) {
             boolean matchesCategory = selectedTabPos == 0 ||
-                    product.getCategoryId() == categories.get(selectedTabPos - 1).getId();
+                    (selectedTabPos > 0 && selectedTabPos <= categories.size() &&
+                            product.getCategoryId() == categories.get(selectedTabPos - 1).getId());
 
             boolean matchesSearch = searchQuery.isEmpty() ||
                     product.getName().toLowerCase().contains(searchQuery) ||
@@ -109,43 +155,6 @@ public class ProductManagementFragment extends Fragment {
             }
         }
         adapter.updateProducts(filtered);
-    }
-
-    private void showSortDialog() {
-        new AlertDialog.Builder(requireContext())
-                .setTitle("Сортировка")
-                .setItems(new String[]{
-                                "По умолчанию",
-                                "По цене (возрастание)",
-                                "По цене (убывание)",
-                                "По названию (А-Я)",
-                                "По названию (Я-А)"},
-                        (dialog, which) -> sortProducts(which))
-                .show();
-    }
-
-    private void sortProducts(int sortType) {
-        List<Product> products = new ArrayList<>(adapter.getProducts());
-
-        switch (sortType) {
-            case 0: // По умолчанию
-                Collections.sort(products, (p1, p2) -> Integer.compare(p1.getId(), p2.getId()));
-                break;
-            case 1: // По цене (возрастание)
-                Collections.sort(products, (p1, p2) -> Double.compare(p1.getPrice(), p2.getPrice()));
-                break;
-            case 2: // По цене (убывание)
-                Collections.sort(products, (p1, p2) -> Double.compare(p2.getPrice(), p1.getPrice()));
-                break;
-            case 3: // По названию (А-Я)
-                Collections.sort(products, (p1, p2) -> p1.getName().compareToIgnoreCase(p2.getName()));
-                break;
-            case 4: // По названию (Я-А)
-                Collections.sort(products, (p1, p2) -> p2.getName().compareToIgnoreCase(p1.getName()));
-                break;
-        }
-
-        adapter.updateProducts(products);
     }
 
     private void showEditDialog(Product product) {
@@ -198,7 +207,23 @@ public class ProductManagementFragment extends Fragment {
                 Toast.makeText(getContext(), "Некорректная цена", Toast.LENGTH_SHORT).show();
             }
         });
+        builder.setNeutralButton("Удалить", (dialog, which) -> {
+            new AlertDialog.Builder(getContext())
+                    .setTitle("Подтверждение удаления")
+                    .setMessage("Вы уверены, что хотите удалить этот товар?")
+                    .setPositiveButton("Да", (d, w) -> {
+                        if (dbHelper.deleteProduct(product.getId())) {
+                            Toast.makeText(getContext(), "Товар удален", Toast.LENGTH_SHORT).show();
+                            loadAllProducts();
+                        } else {
+                            Toast.makeText(getContext(), "Ошибка при удалении", Toast.LENGTH_SHORT).show();
+                        }
+                    })
+                    .setNegativeButton("Нет", null)
+                    .show();
+        });
         builder.setNegativeButton("Отмена", null);
         builder.show();
     }
+
 }
