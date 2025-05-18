@@ -2,4 +2,17 @@
     <string name="app_name">MyProekt</string>
     <string name="product_image">Изображение товара</string>
     <string name="sort">Сортировка</string>
+
+    <string-array name="user_filter_options">
+        <item>Все пользователи</item>
+        <item>Только клиенты</item>
+        <item>Только заблокированные</item>
+    </string-array>
+
+
+
+    <string-array name="roles_array">
+        <item>Клиент</item>
+        <item>Заблокирован</item>
+    </string-array>
 </resources>

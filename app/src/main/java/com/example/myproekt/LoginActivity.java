@@ -32,6 +32,14 @@ public class LoginActivity extends AppCompatActivity {
 
                 String role = dbHelper.checkUser(login, password);
                 if (role != null) {
+                    // Проверяем, не заблокирован ли пользователь (роль "banned")
+                    if ("banned".equals(role)) {
+                        Toast.makeText(LoginActivity.this,
+                                "Ваш аккаунт заблокирован. Обратитесь по номеру +7 960 345 89 70.",
+                                Toast.LENGTH_LONG).show();
+                        return;
+                    }
+
                     Cursor cursor = dbHelper.getReadableDatabase().rawQuery(
                             "SELECT id FROM users WHERE login = ?",
                             new String[]{login}
@@ -43,15 +51,19 @@ public class LoginActivity extends AppCompatActivity {
                         prefs.edit().putInt("current_user_id", userId).apply();
                     }
                     cursor.close();
+
                     Intent intent;
-                    if (role.equals("manager")) {
+                    if ("manager".equals(role)) {
                         intent = new Intent(LoginActivity.this, ManagerActivity.class);
                     } else {
                         intent = new Intent(LoginActivity.this, ClientActivity.class);
                     }
                     startActivity(intent);
+                    finish(); // Закрываем активность входа
                 } else {
-                    Toast.makeText(LoginActivity.this, "Ошибка входа!", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(LoginActivity.this,
+                            "Ошибка входа! Неверный логин или пароль",
+                            Toast.LENGTH_SHORT).show();
                 }
             }
         });

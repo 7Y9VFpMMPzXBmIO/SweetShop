@@ -150,16 +150,35 @@ public class MenuFragment extends Fragment {
     }
 
     private void sortProducts(int sortType) {
-        List<Product> products = adapter.getProducts();
-
-        switch (sortType) {
-            case 0: Collections.sort(products, (p1, p2) -> Integer.compare(p1.getId(), p2.getId())); break;
-            case 1: Collections.sort(products, (p1, p2) -> Double.compare(p1.getPrice(), p2.getPrice())); break;
-            case 2: Collections.sort(products, (p1, p2) -> Double.compare(p2.getPrice(), p1.getPrice())); break;
-            case 3: Collections.sort(products, (p1, p2) -> p1.getName().compareToIgnoreCase(p2.getName())); break;
-            case 4: Collections.sort(products, (p1, p2) -> p2.getName().compareToIgnoreCase(p1.getName())); break;
+        // Получаем продукты из базы данных
+        List<Product> products;
+        if (currentCategoryId == -1) {
+            products = dbHelper.getAllProducts();
+        } else {
+            products = dbHelper.getProductsByCategory(currentCategoryId);
         }
 
-        adapter.notifyDataSetChanged();
+        // Сортируем продукты
+        switch (sortType) {
+            case 0:
+                Collections.sort(products, (p1, p2) -> Integer.compare(p1.getId(), p2.getId()));
+                break;
+            case 1:
+                Collections.sort(products, (p1, p2) -> Double.compare(p1.getPrice(), p2.getPrice()));
+                break;
+            case 2:
+                Collections.sort(products, (p1, p2) -> Double.compare(p2.getPrice(), p1.getPrice()));
+                break;
+            case 3:
+                Collections.sort(products, (p1, p2) -> p1.getName().compareToIgnoreCase(p2.getName()));
+                break;
+            case 4:
+                Collections.sort(products, (p1, p2) -> p2.getName().compareToIgnoreCase(p1.getName()));
+                break;
+        }
+
+        // Обновляем адаптер
+        adapter = new ProductAdapter(products, getContext(), dbHelper);
+        recyclerView.setAdapter(adapter);
     }
 }

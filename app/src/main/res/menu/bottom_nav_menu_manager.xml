@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <item
+        android:id="@+id/nav_menu_management"
+        android:icon="@drawable/ic_menu"
+        android:title="Меню"
+        app:showAsAction="ifRoom"/>
+
+    <item
+        android:id="@+id/nav_orders_management"
+        android:icon="@drawable/ic_orders"
+        android:title="Заказы"
+        app:showAsAction="ifRoom"/>
+
+    <item
+        android:id="@+id/nav_users_management"
+        android:icon="@drawable/ic_users"
+        android:title="Пользователи"
+        app:showAsAction="ifRoom"/>
+</menu>

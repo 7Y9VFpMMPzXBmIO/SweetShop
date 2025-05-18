@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="order_status_options">
+        <item>Все</item>
+        <item>В обработке</item>
+        <item>Завершенные</item>
+        <item>Отмененные</item>
+    </string-array>
+    <string-array name="order_search_types">
+        <item>Номер заказа</item>
+        <item>Телефон</item>
+        <item>Имя</item>
+        <item>Логин</item>
+    </string-array>
+</resources>

@@ -25,6 +25,7 @@
         <activity android:name=".ClientActivity" />
         <activity android:name=".ManagerActivity" />
         <activity android:name=".OrderDetailActivity" />
+
     </application>
 
 </manifest>
