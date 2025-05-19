@@ -27,12 +27,17 @@ public class CartFragment extends Fragment {
     private Button clearCartButton;
     private int userId;
     private Button checkoutButton;
-
+    private View emptyCartView;
+    private View nonEmptyCartView;
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_cart, container, false);
+
+        // Инициализация views
+        emptyCartView = view.findViewById(R.id.empty_cart_view);
+        nonEmptyCartView = view.findViewById(R.id.non_empty_cart_view);
 
         SharedPreferences prefs = requireContext().getSharedPreferences("AppPrefs", Context.MODE_PRIVATE);
         userId = prefs.getInt("current_user_id", -1);
@@ -52,13 +57,15 @@ public class CartFragment extends Fragment {
             adapter = new CartAdapter(new ArrayList<>(), getContext(), dbHelper, userId, this::updateTotalPrice);
             recyclerView.setAdapter(adapter);
             updateTotalPrice();
+            updateCartVisibility();
             Toast.makeText(getContext(), "Корзина очищена", Toast.LENGTH_SHORT).show();
         });
 
         return view;
     }
+
     private void checkout() {
-        if (adapter == null || adapter.getCartItems().isEmpty()) {
+        if (adapter == null || adapter.getItemCount() == 0) {
             Toast.makeText(getContext(), "Корзина пуста", Toast.LENGTH_SHORT).show();
             return;
         }
@@ -84,6 +91,7 @@ public class CartFragment extends Fragment {
                     dbHelper, userId, this::updateTotalPrice);
             recyclerView.setAdapter(adapter);
             updateTotalPrice();
+            updateCartVisibility();
         } else {
             Toast.makeText(getContext(), "Ошибка оформления заказа",
                     Toast.LENGTH_SHORT).show();
@@ -92,24 +100,27 @@ public class CartFragment extends Fragment {
 
     private void setupRecyclerView() {
         List<CartItem> cartItems = dbHelper.getCartItems(userId);
-
-        if (cartItems.isEmpty()) {
-            showEmptyCartMessage();
-            return;
-        }
-
-        adapter = new CartAdapter(cartItems, getContext(), dbHelper, userId, this::updateTotalPrice);
+        adapter = new CartAdapter(cartItems, getContext(), dbHelper, userId, () -> {
+            updateTotalPrice();
+            updateCartVisibility();
+        });
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         recyclerView.setAdapter(adapter);
+
+        updateCartVisibility();
     }
 
-    private void showEmptyCartMessage() {
-        totalPriceTextView.setText("Итого: 0 руб.");
+    private void updateCartVisibility() {
+        boolean isEmpty = adapter == null || adapter.getItemCount() == 0;
+        emptyCartView.setVisibility(isEmpty ? View.VISIBLE : View.GONE);
+        nonEmptyCartView.setVisibility(isEmpty ? View.GONE : View.VISIBLE);
 
+        // Обновляем текст общей суммы даже для пустой корзины
+        totalPriceTextView.setText(isEmpty ? "Итого: 0 руб." : totalPriceTextView.getText());
     }
 
     private void updateTotalPrice() {
-        if (adapter == null || adapter.getCartItems().isEmpty()) {
+        if (adapter == null || adapter.getItemCount() == 0) {
             totalPriceTextView.setText("Итого: 0 руб.");
             return;
         }

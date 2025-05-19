@@ -109,11 +109,10 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.ViewHolder> {
         this.cartItems = newItems;
         notifyDataSetChanged();
     }
+
     public List<CartItem> getCartItems() {
         return cartItems;
     }
-
-
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
         ImageView imageView;

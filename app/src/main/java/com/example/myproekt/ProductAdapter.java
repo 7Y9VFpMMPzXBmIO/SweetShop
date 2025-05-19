@@ -1,13 +1,14 @@
 package com.example.myproekt;
 
-import android.app.AlertDialog;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -20,14 +21,16 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ViewHold
     private List<Product> products;
     private Context context;
     private DatabaseHelper dbHelper;
+    private int userId;
 
     public ProductAdapter(List<Product> products, Context context, DatabaseHelper dbHelper) {
         this.products = products;
         this.context = context;
         this.dbHelper = dbHelper;
-    }
-    public List<Product> getProducts() {
-        return products;
+
+        // Получаем ID текущего пользователя
+        SharedPreferences prefs = context.getSharedPreferences("AppPrefs", Context.MODE_PRIVATE);
+        this.userId = prefs.getInt("current_user_id", -1);
     }
 
     @NonNull
@@ -48,61 +51,58 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ViewHold
                 "drawable",
                 context.getPackageName());
         if (imageResId != 0) {
-            holder.imageView.setImageResource(imageResId);
+            holder.productImage.setImageResource(imageResId);
         }
 
-        // Установка данных
-        holder.nameTextView.setText(product.getName());
-        holder.priceTextView.setText(String.format("%.2f руб.", product.getPrice()));
-        holder.weightTextView.setText(product.getWeight());
+        holder.productName.setText(product.getName());
+        holder.productCategory.setText(dbHelper.getCategoryName(product.getCategoryId()));
+        holder.productWeight.setText(product.getWeight());
+        holder.productPrice.setText(String.format("%.2f руб.", product.getPrice()));
 
-        String[] categories = {"", "Торт", "Печенье", "Конфеты", "Десерт", "Напиток"};
-        holder.categoryTextView.setText(categories[product.getCategoryId()]);
+        // Проверяем, есть ли товар в корзине
+        CartItem cartItem = dbHelper.getCartItem(userId, product.getId());
+        boolean isInCart = cartItem != null;
 
-        // Обработчик кнопки "В корзину"
+        // Настраиваем видимость элементов
+        holder.addToCartButton.setVisibility(isInCart ? View.GONE : View.VISIBLE);
+        holder.quantityControls.setVisibility(isInCart ? View.VISIBLE : View.GONE);
+
+        if (isInCart) {
+            holder.quantityTextView.setText(String.valueOf(cartItem.getQuantity()));
+        }
+
+        // Обработчик кнопки добавления в корзину
         holder.addToCartButton.setOnClickListener(v -> {
-            SharedPreferences prefs = context.getSharedPreferences("AppPrefs", Context.MODE_PRIVATE);
-            int userId = prefs.getInt("current_user_id", -1);
+            dbHelper.addToCart(userId, product.getId(), 1);
+            Toast.makeText(context, product.getName() + " добавлен в корзину", Toast.LENGTH_SHORT).show();
+            // Обновляем текущий элемент
+            notifyItemChanged(position);
+        });
 
-            if (userId != -1) {
-                dbHelper.addToCart(userId, product.getId());
-                Toast.makeText(context, product.getName() + " добавлен в корзину",
-                        Toast.LENGTH_SHORT).show();
-            } else {
-                Toast.makeText(context, "Ошибка: пользователь не авторизован",
-                        Toast.LENGTH_SHORT).show();
+        // Обработчики кнопок управления количеством
+        holder.increaseButton.setOnClickListener(v -> {
+            CartItem currentCartItem = dbHelper.getCartItem(userId, product.getId());
+            if (currentCartItem != null) {
+                int newQuantity = currentCartItem.getQuantity() + 1;
+                dbHelper.updateCartItemQuantity(currentCartItem.getId(), newQuantity);
+                holder.quantityTextView.setText(String.valueOf(newQuantity));
+                notifyItemChanged(position);
             }
         });
 
-        // Обработчик клика по карточке (показ деталей)
-        holder.itemView.setOnClickListener(v -> showProductDetails(product));
-    }
-
-    private void showProductDetails(Product product) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(context);
-        builder.setTitle(product.getName());
-
-        // Форматируем детали (заменяем \n на переносы строк)
-        String formattedDetails = product.getDetails() != null ?
-                product.getDetails().replace("\\n", "\n") :
-                "Описание отсутствует";
-
-        builder.setMessage(formattedDetails);
-        builder.setPositiveButton("Закрыть", null);
-
-        // Кнопка добавления в корзину прямо из диалога
-        builder.setNeutralButton("Добавить в корзину", (dialog, which) -> {
-            SharedPreferences prefs = context.getSharedPreferences("AppPrefs", Context.MODE_PRIVATE);
-            int userId = prefs.getInt("current_user_id", -1);
-
-            if (userId != -1) {
-                dbHelper.addToCart(userId, product.getId());
-                Toast.makeText(context, product.getName() + " добавлен в корзину",
-                        Toast.LENGTH_SHORT).show();
+        holder.decreaseButton.setOnClickListener(v -> {
+            CartItem currentCartItem = dbHelper.getCartItem(userId, product.getId());
+            if (currentCartItem != null) {
+                int newQuantity = currentCartItem.getQuantity() - 1;
+                if (newQuantity > 0) {
+                    dbHelper.updateCartItemQuantity(currentCartItem.getId(), newQuantity);
+                    holder.quantityTextView.setText(String.valueOf(newQuantity));
+                } else {
+                    dbHelper.removeFromCart(currentCartItem.getId());
+                }
+                notifyItemChanged(position);
             }
         });
-
-        builder.show();
     }
 
     @Override
@@ -110,22 +110,35 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ViewHold
         return products.size();
     }
 
+    public void updateProducts(List<Product> newProducts) {
+        this.products = newProducts;
+        notifyDataSetChanged();
+    }
+
     public static class ViewHolder extends RecyclerView.ViewHolder {
-        ImageView imageView;
-        TextView nameTextView;
-        TextView priceTextView;
-        TextView weightTextView;
-        TextView categoryTextView;
+        ImageView productImage;
+        TextView productName;
+        TextView productCategory;
+        TextView productWeight;
+        TextView productPrice;
         Button addToCartButton;
+        LinearLayout quantityControls;
+        ImageButton decreaseButton;
+        TextView quantityTextView;
+        ImageButton increaseButton;
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
-            imageView = itemView.findViewById(R.id.productImage);
-            nameTextView = itemView.findViewById(R.id.productName);
-            priceTextView = itemView.findViewById(R.id.productPrice);
-            weightTextView = itemView.findViewById(R.id.productWeight);
-            categoryTextView = itemView.findViewById(R.id.productCategory);
+            productImage = itemView.findViewById(R.id.productImage);
+            productName = itemView.findViewById(R.id.productName);
+            productCategory = itemView.findViewById(R.id.productCategory);
+            productWeight = itemView.findViewById(R.id.productWeight);
+            productPrice = itemView.findViewById(R.id.productPrice);
             addToCartButton = itemView.findViewById(R.id.addToCartButton);
+            quantityControls = itemView.findViewById(R.id.quantityControls);
+            decreaseButton = itemView.findViewById(R.id.decreaseButton);
+            quantityTextView = itemView.findViewById(R.id.quantityTextView);
+            increaseButton = itemView.findViewById(R.id.increaseButton);
         }
     }
 }
