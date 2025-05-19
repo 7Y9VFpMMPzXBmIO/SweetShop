@@ -36,32 +36,28 @@ public class ProfileFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_profile, container, false);
 
-        // Инициализация элементов
         avatarImage = view.findViewById(R.id.avatar_image);
         nameInput = view.findViewById(R.id.name_input);
         phoneInput = view.findViewById(R.id.phone_input);
         ordersRecycler = view.findViewById(R.id.orders_recycler);
         Button saveBtn = view.findViewById(R.id.save_btn);
+        Button logoutBtn = view.findViewById(R.id.logout_btn);
 
-        // Настройка RecyclerView
         ordersRecycler.setLayoutManager(new LinearLayoutManager(getContext()));
         orderAdapter = new OrderAdapter();
         ordersRecycler.setAdapter(orderAdapter);
 
-        // Получаем userId из SharedPreferences
         SharedPreferences prefs = requireActivity().getSharedPreferences("AppPrefs", Context.MODE_PRIVATE);
         userId = prefs.getInt("current_user_id", -1);
         dbHelper = new DatabaseHelper(getContext());
 
-        // Загружаем данные пользователя
         loadUserData();
-
-        // Загружаем историю заказов
         loadOrders();
 
-        // Обработчики событий
         avatarImage.setOnClickListener(v -> openGallery());
         saveBtn.setOnClickListener(v -> saveProfile());
+        logoutBtn.setOnClickListener(v -> logoutUser());
+
         orderAdapter.setOnOrderClickListener(order -> {
             Intent intent = new Intent(getActivity(), OrderDetailActivity.class);
             intent.putExtra("order_id", order.getId());
@@ -81,7 +77,6 @@ public class ProfileFragment extends Fragment {
             nameInput.setText(cursor.getString(0));
             phoneInput.setText(cursor.getString(1));
 
-            // Загрузка аватарки
             String avatarPath = cursor.getString(2);
             if (avatarPath != null) {
                 avatarImage.setImageURI(Uri.parse(avatarPath));
@@ -106,8 +101,6 @@ public class ProfileFragment extends Fragment {
         if (requestCode == PICK_IMAGE && resultCode == RESULT_OK && data != null) {
             Uri imageUri = data.getData();
             avatarImage.setImageURI(imageUri);
-
-            // Сохраняем путь к изображению
             dbHelper.updateUserAvatar(userId, imageUri.toString());
         }
     }
@@ -121,5 +114,15 @@ public class ProfileFragment extends Fragment {
         } else {
             Toast.makeText(getContext(), "Ошибка сохранения", Toast.LENGTH_SHORT).show();
         }
+    }
+
+    private void logoutUser() {
+        SharedPreferences prefs = requireActivity().getSharedPreferences("AppPrefs", Context.MODE_PRIVATE);
+        prefs.edit().remove("current_user_id").apply();
+
+        Intent intent = new Intent(getActivity(), LoginActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+        startActivity(intent);
+        requireActivity().finish();
     }
 }
