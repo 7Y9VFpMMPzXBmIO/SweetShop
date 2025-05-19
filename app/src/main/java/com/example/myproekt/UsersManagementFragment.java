@@ -1,5 +1,8 @@
 package com.example.myproekt;
 
+import android.content.Context;
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -39,8 +42,10 @@ public class UsersManagementFragment extends Fragment {
         searchInput = view.findViewById(R.id.search_input);
         filterSpinner = view.findViewById(R.id.filter_spinner);
         TextView filterLabel = view.findViewById(R.id.filter_label);
+        Button logoutBtn = view.findViewById(R.id.logout_btn);
 
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
+        logoutBtn.setOnClickListener(v -> logoutUser());
 
         // Настройка фильтра
         ArrayAdapter<CharSequence> filterAdapter = ArrayAdapter.createFromResource(
@@ -92,12 +97,10 @@ public class UsersManagementFragment extends Fragment {
 
         List<User> filteredUsers = new ArrayList<>();
         for (User user : allUsers) {
-            // Фильтрация по выбранному типу
-            boolean matchesFilter = (filterType == 0) || // Все
-                    (filterType == 1 && user.getRoleId() == 2) || // Только клиенты
-                    (filterType == 2 && user.getRoleId() == 3); // Только заблокированные
+            boolean matchesFilter = (filterType == 0) ||
+                    (filterType == 1 && user.getRoleId() == 2) ||
+                    (filterType == 2 && user.getRoleId() == 3);
 
-            // Поиск по всем полям
             boolean matchesSearch = searchQuery.isEmpty() ||
                     user.getName().toLowerCase().contains(searchQuery) ||
                     user.getLogin().toLowerCase().contains(searchQuery) ||
@@ -111,7 +114,7 @@ public class UsersManagementFragment extends Fragment {
         adapter = new UserAdapter(filteredUsers, new UserAdapter.OnRoleChangeListener() {
             @Override
             public void onRoleChanged(int userId, int newRoleId) {
-                if (newRoleId == 1) { // Запрет на менеджера
+                if (newRoleId == 1) {
                     Toast.makeText(getContext(),
                             "Нельзя назначить роль менеджера",
                             Toast.LENGTH_SHORT).show();
@@ -120,7 +123,7 @@ public class UsersManagementFragment extends Fragment {
 
                 boolean success = dbHelper.updateUserRole(userId, newRoleId);
                 if (success) {
-                    loadUsers(); // Обновляем список
+                    loadUsers();
                     Toast.makeText(getContext(),
                             "Роль обновлена",
                             Toast.LENGTH_SHORT).show();
@@ -128,5 +131,15 @@ public class UsersManagementFragment extends Fragment {
             }
         });
         recyclerView.setAdapter(adapter);
+    }
+
+    private void logoutUser() {
+        SharedPreferences prefs = requireActivity().getSharedPreferences("AppPrefs", Context.MODE_PRIVATE);
+        prefs.edit().remove("current_user_id").apply();
+
+        Intent intent = new Intent(getActivity(), LoginActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+        startActivity(intent);
+        requireActivity().finish();
     }
 }

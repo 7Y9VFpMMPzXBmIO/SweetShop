@@ -1,67 +1,101 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:padding="16dp">
 
-    <LinearLayout
+    <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical">
+        android:layout_height="match_parent"
+        android:layout_above="@id/address_text"
+        android:layout_alignParentTop="true">
 
-        <!-- Блок профиля -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:paddingBottom="16dp">
+            android:orientation="vertical">
 
-            <ImageView
-                android:id="@+id/avatar_image"
-                android:layout_width="100dp"
-                android:layout_height="100dp"
-                android:layout_gravity="center"
-                android:src="@drawable/default_avatar"
-                android:contentDescription="Аватар"
-                android:scaleType="centerCrop"
-                android:background="@drawable/circle_shape"/>
-
-            <EditText
-                android:id="@+id/name_input"
+            <!-- Блок профиля -->
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:hint="Имя"
-                android:inputType="textPersonName"/>
+                android:orientation="vertical"
+                android:paddingBottom="16dp">
 
-            <EditText
-                android:id="@+id/phone_input"
+                <ImageView
+                    android:id="@+id/avatar_image"
+                    android:layout_width="100dp"
+                    android:layout_height="100dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/default_avatar"
+                    android:contentDescription="Аватар"
+                    android:scaleType="centerCrop"
+                    android:background="@drawable/circle_shape"/>
+
+                <EditText
+                    android:id="@+id/name_input"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:hint="Имя"
+                    android:inputType="textPersonName"/>
+
+                <EditText
+                    android:id="@+id/phone_input"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:hint="Телефон"
+                    android:inputType="phone"/>
+
+                <Button
+                    android:id="@+id/save_btn"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:text="Сохранить"/>
+            </LinearLayout>
+
+            <!-- История заказов -->
+            <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:hint="Телефон"
-                android:inputType="phone"/>
+                android:text="История заказов"
+                android:textSize="18sp"
+                android:textStyle="bold"/>
 
-            <Button
-                android:id="@+id/save_btn"
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/orders_recycler"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:text="Сохранить"/>
+                android:layout_marginTop="8dp"/>
         </LinearLayout>
+    </ScrollView>
 
-        <!-- История заказов -->
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="История заказов"
-            android:textSize="18sp"
-            android:textStyle="bold"/>
+    <!-- Текст адреса в левом нижнем углу -->
+    <TextView
+        android:id="@+id/address_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentStart="true"
+        android:layout_margin="16dp"
+        android:text="Завершенные заказы забирайте по адресу: ул. Примерная, 123"
+        android:textStyle="bold"
+        android:textSize="14sp"
+        android:maxWidth="240dp"/>
 
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/orders_recycler"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"/>
-    </LinearLayout>
-</ScrollView>
+    <!-- Кнопка выхода в правом нижнем углу -->
+    <Button
+        android:id="@+id/logout_btn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentEnd="true"
+        android:layout_margin="16dp"
+        android:text="Выйти"
+        android:textColor="@android:color/white"
+        android:backgroundTint="@android:color/holo_red_dark"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"/>
+</RelativeLayout>

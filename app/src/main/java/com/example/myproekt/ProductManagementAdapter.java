@@ -1,6 +1,8 @@
 package com.example.myproekt;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -8,6 +10,8 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
+
+import java.io.File;
 import java.util.List;
 
 public class ProductManagementAdapter extends RecyclerView.Adapter<ProductManagementAdapter.ViewHolder> {
@@ -43,23 +47,39 @@ public class ProductManagementAdapter extends RecyclerView.Adapter<ProductManage
         Product product = products.get(position);
         Context context = holder.itemView.getContext();
 
-        // Установка изображения
-        if (product.getDescription() != null && !product.getDescription().isEmpty()) {
-            int imageResId = context.getResources().getIdentifier(
-                    product.getDescription(),
-                    "drawable",
-                    context.getPackageName());
-            holder.imageView.setImageResource(imageResId != 0 ? imageResId : R.drawable.placeholder);
-        } else {
-            holder.imageView.setImageResource(R.drawable.placeholder);
-        }
-
+        // Установка текстовых значений
         holder.nameTextView.setText(product.getName());
         holder.priceTextView.setText(String.format("%.2f руб.", product.getPrice()));
 
         // Получаем название категории
         Category category = dbHelper.getCategoryById(product.getCategoryId());
         holder.categoryTextView.setText(category != null ? category.getName() : "Без категории");
+
+        // Загрузка изображения
+        if (product.getDescription() != null && !product.getDescription().isEmpty()) {
+            try {
+                File file = new File(context.getFilesDir(), product.getDescription());
+                if (file.exists() && file.length() > 0) {
+                    Bitmap bitmap = BitmapFactory.decodeFile(file.getAbsolutePath());
+                    holder.imageView.setImageBitmap(bitmap);
+                } else {
+                    // Если файл не найден, пробуем загрузить из ресурсов
+                    int resId = context.getResources().getIdentifier(
+                            product.getDescription().replace(".", ""), // Удаляем расширение для ресурсов
+                            "drawable",
+                            context.getPackageName());
+                    if (resId != 0) {
+                        holder.imageView.setImageResource(resId);
+                    } else {
+                        holder.imageView.setImageResource(R.drawable.placeholder);
+                    }
+                }
+            } catch (Exception e) {
+                holder.imageView.setImageResource(R.drawable.placeholder);
+            }
+        } else {
+            holder.imageView.setImageResource(R.drawable.placeholder);
+        }
 
         holder.itemView.setOnClickListener(v -> listener.onProductClick(product));
     }
