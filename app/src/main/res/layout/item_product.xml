@@ -73,6 +73,7 @@
                 android:textSize="18sp"
                 android:textStyle="bold"/>
 
+            <!-- Кнопка добавления в корзину -->
             <Button
                 android:id="@+id/addToCartButton"
                 android:layout_width="wrap_content"
@@ -80,6 +81,38 @@
                 android:text="В корзину"
                 android:backgroundTint="@color/colorPrimary"
                 android:textColor="@android:color/white"/>
+
+            <!-- Группа управления количеством (изначально скрыта) -->
+            <LinearLayout
+                android:id="@+id/quantityControls"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center"
+                android:visibility="gone">
+
+                <ImageButton
+                    android:id="@+id/decreaseButton"
+                    android:layout_width="30dp"
+                    android:layout_height="30dp"
+                    android:src="@drawable/minus"
+                    android:background="?attr/selectableItemBackgroundBorderless"/>
+
+                <TextView
+                    android:id="@+id/quantityTextView"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginHorizontal="8dp"
+                    android:text="1"
+                    android:textSize="16sp"/>
+
+                <ImageButton
+                    android:id="@+id/increaseButton"
+                    android:layout_width="30dp"
+                    android:layout_height="30dp"
+                    android:src="@drawable/plus"
+                    android:background="?attr/selectableItemBackgroundBorderless"/>
+            </LinearLayout>
         </LinearLayout>
     </LinearLayout>
 </androidx.cardview.widget.CardView>

@@ -134,6 +134,17 @@ public class MenuFragment extends Fragment {
     private void updateAdapter(List<Product> products) {
         adapter = new ProductAdapter(products, getContext(), dbHelper);
         recyclerView.setAdapter(adapter);
+
+        // Добавляем слушатель изменений в корзине
+        adapter.registerAdapterDataObserver(new RecyclerView.AdapterDataObserver() {
+            @Override
+            public void onChanged() {
+                super.onChanged();
+                // При изменении данных в адаптере обновляем все элементы
+                // Это нужно для обновления состояния кнопок при изменении корзины
+                adapter.notifyDataSetChanged();
+            }
+        });
     }
 
     private void showSortDialog() {
