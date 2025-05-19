@@ -1,6 +1,7 @@
 package com.example.myproekt;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -55,7 +56,7 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ViewHold
 
         holder.productName.setText(product.getName());
         holder.productCategory.setText(dbHelper.getCategoryName(product.getCategoryId()));
-        holder.productWeight.setText(product.getWeight() + " г");
+        holder.productWeight.setText(product.getWeight());
         holder.productPrice.setText(String.format("%.2f руб.", product.getPrice()));
 
         // Проверяем, есть ли товар в корзине
@@ -74,25 +75,31 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ViewHold
         holder.addToCartButton.setOnClickListener(v -> {
             dbHelper.addToCart(userId, product.getId(), 1);
             Toast.makeText(context, product.getName() + " добавлен в корзину", Toast.LENGTH_SHORT).show();
-
-            // Обновляем отображение
+            // Обновляем текущий элемент
             notifyItemChanged(position);
         });
 
         // Обработчики кнопок управления количеством
         holder.increaseButton.setOnClickListener(v -> {
-            int newQuantity = cartItem.getQuantity() + 1;
-            dbHelper.updateCartItemQuantity(cartItem.getId(), newQuantity);
-            holder.quantityTextView.setText(String.valueOf(newQuantity));
+            CartItem currentCartItem = dbHelper.getCartItem(userId, product.getId());
+            if (currentCartItem != null) {
+                int newQuantity = currentCartItem.getQuantity() + 1;
+                dbHelper.updateCartItemQuantity(currentCartItem.getId(), newQuantity);
+                holder.quantityTextView.setText(String.valueOf(newQuantity));
+                notifyItemChanged(position);
+            }
         });
 
         holder.decreaseButton.setOnClickListener(v -> {
-            int newQuantity = cartItem.getQuantity() - 1;
-            if (newQuantity > 0) {
-                dbHelper.updateCartItemQuantity(cartItem.getId(), newQuantity);
-                holder.quantityTextView.setText(String.valueOf(newQuantity));
-            } else {
-                dbHelper.removeFromCart(cartItem.getId());
+            CartItem currentCartItem = dbHelper.getCartItem(userId, product.getId());
+            if (currentCartItem != null) {
+                int newQuantity = currentCartItem.getQuantity() - 1;
+                if (newQuantity > 0) {
+                    dbHelper.updateCartItemQuantity(currentCartItem.getId(), newQuantity);
+                    holder.quantityTextView.setText(String.valueOf(newQuantity));
+                } else {
+                    dbHelper.removeFromCart(currentCartItem.getId());
+                }
                 notifyItemChanged(position);
             }
         });
